@@ -1,0 +1,6 @@
+[ws] socket connected
+[ws] sending: auth { password:
+   '80f189984e5ca70287d13342f6daa0db45cba3c131c4e46dc81360f3a4c4f690' }
+[ws] socket received: auth true
+[ws] authenticated
+[ws] sending: identify { type: 'library' }

@@ -1,0 +1,31 @@
+{
+    "sources": ["/Users/anuv/Music/iTunes/iTunes Media/Music"],
+    "remote_web": "https://uncurated.anuv.me",
+    "remote_ws": "wss://uncurated.anuv.me/socket",
+    "ws_reconnect_interval": 5000,
+    "secret": "80f189984e5ca70287d13342f6daa0db45cba3c131c4e46dc81360f3a4c4f690",
+    "artist_parse": {
+        "exceptions": [
+            "Crosby, Stills, Nash & Young",
+            "Earth, Wind & Fire",
+            "Tyler, the Creator",
+            "Alex & Sierra",
+            "Donnie Trumpet & The Social Experiment",
+            "Dreamer & Son",
+            "Drew Holcomb & The Neighbors",
+            "Flitz&Suppe",
+            "George Thorogood & the Destroyers",
+            "Kool & The Gang",
+            "Lilygreen & Maguire",
+            "Schwarz & Funk",
+            "Simon & Garfunkel"
+        ],
+        "separators": {
+            "__primary__": "comma",
+            "comma": ", ",
+            "ampersand": "& ",
+            "ex": " x ",
+            "feature": "ft. "
+        }
+    }
+}
