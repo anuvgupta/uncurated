@@ -1,0 +1,4 @@
+*.DS_Store
+
+library-backend/node_modules
+web-backend/node_modules
