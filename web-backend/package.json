@@ -1,0 +1,19 @@
+{
+  "name": "uncurated-web-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "web.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Anuv Gupta",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.0",
+    "mongodb": "^3.6.1",
+    "random-number": "0.0.9",
+    "ws": "^7.3.1"
+  }
+}

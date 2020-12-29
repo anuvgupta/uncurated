@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,600');
+
+* {
+    font-family: 'Source Sans Pro', Trebuchet, Verdana, Helvetica, Arial,
+        sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    background-color: #fff;
+    overflow: hidden;
+    font-size: 0;
+}
+
+a {
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

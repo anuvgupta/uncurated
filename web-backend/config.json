@@ -1,0 +1,9 @@
+{
+    "ws_port": 3013,
+    "http_port": 3012,
+    "mdb_port": 27017,
+    "secret": "80f189984e5ca70287d13342f6daa0db45cba3c131c4e46dc81360f3a4c4f690",
+    "artwork_small_size": 100,
+    "artwork_large_size": 1500,
+    "file_rotate_limit": 10
+}

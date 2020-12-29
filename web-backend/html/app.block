@@ -1,0 +1,1184 @@
+    *
+
+// uncurated main blockfile
+
+// app UI content layer
+app
+    id app
+    css
+        opacity 0
+        transition opacity 0.4s
+        height 100%
+        width 100.8%
+        overflow hidden
+        max-width 700px
+        margin 0 auto
+        box-sizing border-box
+        position relative
+    #auth
+        {
+            if (auth === true) {
+                if (app.ws.api.auth) {
+                    util.cookie('password', app.ws.api.auth.password, "__indefinite__");
+                }
+                block.child('login').on('hide');
+                block.child('main').on('show');
+            } else {
+                if (app.ws.api.hasOwnProperty('_temp_prelogin') && app.ws.api._temp_prelogin) {
+                    app.ws.api._temp_prelogin = false;
+                } else block.child('login/content/error/text').css('display', 'inline-block');
+            }
+        }
+    block login
+        :show
+            {
+                block.css('display', 'table');
+                event.stopPropagation();
+            }
+        :hide
+            {
+                block.css('display', 'none');
+                event.stopPropagation();
+            }
+        css
+            margin 0
+            opacity 1
+        div logo
+            css
+                margin 0 auto -15px auto
+                width 150px
+                opacity 0.9
+            image logo
+                src img/speaker_b.png
+                width 150px
+                height 150px
+        h1 h1
+            html uncurated
+            css
+                opacity 0.9
+                font-size xx-large
+        div content
+            css
+                margin-bottom 70px
+            input password
+                type password
+                placeholder password
+                css
+                    width 120px
+                    margin-bottom 5px
+                    text-align center
+                    border 1px solid rgba(20, 20, 20, 0.15)
+                    border-radius 1.5px
+                    outline none
+                :keyup
+                    {
+                        if (event.keyCode == 13) {
+                            block.sibling('submit').$().click();
+                        }
+                    }
+            div error
+                css
+                    margin-bottom 4px
+                text text
+                    val invalid credentials
+                    css
+                        color rgba(150, 30, 30, 0.8)
+                        font-size 12px
+                        display none
+            button submit
+                html listen
+                css
+                    width 128px
+                    cursor pointer
+                    border 1px solid rgba(20, 20, 20, 0.15)
+                    border-radius 1.5px
+                    transition background-color 0.2s ease
+                    background-color #f6f6f6
+                    outline none
+                    height 24px
+                :click
+                    {
+                        var password = block.sibling('password').node().value;
+                        if (password) {
+                            password = password.trim();
+                            if (password != "") {
+                                util.sha256(password, hashed_password => {
+                                    app.ws.api.login(hashed_password);
+                                });
+                            }
+                        }
+                    }
+                :mouseover
+                    css
+                        background-color #f1f1f1
+                :mouseout
+                    css
+                        background-color #f6f6f6
+    #search_songs
+        {
+            setTimeout(_ => {
+                if (search_songs.length <= 0) {
+                    var message = "no songs found";
+                    block.child('main/songs/pages').css('display', 'none');
+                    block.child('main/songs/results')
+                        .html(`<div style="text-align: center; width: 100%; height: 50px;"><span style="font-size: 25px; color: #111;"><br/>${message}</span></div>`);
+                } else {
+                    search_songs = util.paginate(search_songs, 10);
+                    block.child('main/songs/results')
+                        .key('data', search_songs)
+                        .on('load_page', {
+                            page: 0
+                        });
+                    block.child('main/songs/pages')
+                        .child('left').on('disable').sibling('right').on('enable');
+                }
+                block.child('main/songs/loading').css('display', 'none')
+                    .sibling('results').css('display', 'block');
+                setTimeout(_ => {
+                    block.child('main/songs/results').$().scrollTop(0);
+                }, 15);
+            }, 20);
+        }
+    #song_ready
+        {
+            setTimeout(_ => {
+                if (song_ready && song_ready.id && app.audio.id == song_ready.id) {
+                    var id = song_ready.id;
+                    app.audio.play_song(id, `download-song/${id}`, _ => { });
+                    var button = block.child('main/play/control/play/button');
+                    button.on('enable');
+                    if (button.key('state') == 'play') {
+                        button.child('img').data({
+                            src: 'img/pause_b.png'
+                        });
+                        button.key('state', 'pause');
+                    }
+                    block.child('main/play').data({
+                        song: song_ready
+                    });
+                    app.ws.api.get_artwork_full(song_ready.id);
+                }
+            }, 10);
+        }
+    #art_ready
+        {
+            var data_uri = `data:${art_ready.data.format};base64,` + art_ready.data.data;
+            if (art_ready.large) {
+                if (app.audio.id == art_ready.id) {
+                    var target = block.child('main/play/cover/image/img').data({
+                        src: data_uri
+                    });
+                }
+            } else {
+                var children = block.child('main/songs/results').children();
+                for (var c in children) {
+                    if (c == art_ready.id) {
+                        children[c].data({
+                            art: data_uri
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+    div main
+        :show
+            {
+                block.css('display', 'block');
+                event.stopPropagation();
+            }
+        :hide
+            {
+                block.css('display', 'none');
+                event.stopPropagation();
+            }
+            }
+        css
+            display none
+            position relative
+            height 100%
+            width 100%
+            opacity 1
+            background-color #f5f5f5
+            //borderLeft 1px solid #f2f2f2
+            //borderRight 1px solid #f2f2f2
+            box-sizing border-box
+        div header
+            css
+                position absolute
+                top 0
+                left 0
+                width 100%
+                height 86px
+                background-color black
+                box-shadow rgba(50, 50, 50, 0.3) 0px 2px 4px
+                z-index 101
+            block logo
+                css
+                    width 86px
+                    margin-left 32px
+                    margin-top -3px
+                    float left
+                image img
+                    src img/speaker_w.png
+                    height 60px
+                    width 60px
+            block title
+                css
+                    width auto
+                    float left
+                    margin-left -3px
+                    //margin-left 50px
+                    margin-top -2px
+                text text
+                    val Uncurated
+                    css
+                        color white
+                        font-size 30px
+                        letter-spacing 0.8px
+                        cursor default
+            block logout
+                css
+                    position absolute
+                    top 0
+                    right 7px
+                    width 86px
+                div image
+                    css
+                        margin 0 auto
+                        cursor pointer
+                        width 42px
+                        height 42px
+                        opacity 0.9
+                        transition opacity 0.1s ease
+                    :mouseover
+                        css
+                            opacity 1
+                    :mouseout
+                        css
+                            opacity 0.9
+                    :click
+                        {
+                            app.ws.api.logout();
+                        }
+                    image img
+                        src img/power_w.png
+                        width 42px
+                        height 42px
+        div footer
+            css
+                position absolute
+                bottom 0
+                left 0
+                width 100%
+                height 100px
+                background-color black
+                box-sizing border-box
+                border-top 1px solid #ebebeb
+                //box-shadow rgba(50, 50, 50, 0.3) 0px 2px 4px
+                box-shadow 0px -1px 5px 2px rgba(0,0,0,0.05)
+                z-index 100
+            div wrap
+                css
+                    width 300px
+                    margin 0 auto
+                    height 100%
+                block songs
+                    css
+                        width 150px
+                        //margin 0 auto
+                        cursor pointer
+                        display inline-table
+                        background-color #1c1c1c
+                    image img
+                        src img/note_w.png
+                        height 50px
+                        width 50px
+                        css
+                            margin 0 auto 5px
+                    div text
+                        text text
+                            val Songs
+                            css
+                                color white
+                                font-size 15px
+                    :click
+                        {
+                            var siblings = block.parent().children();
+                            for (var s in siblings) {
+                                siblings[s].css({
+                                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                                });
+                            }
+                            block.css({
+                                backgroundColor: '#1c1c1c'
+                            });
+
+                            var siblings = block.parent(2).children();
+                            for (var s in siblings) {
+                                if (s != 'header' && s != 'footer') {
+                                    if (s == block.mark())
+                                        siblings[s].on('show');
+                                    else siblings[s].on('hide');
+                                }
+                            }
+                        }
+                block play
+                    css
+                        width 150px
+                        //margin 0 auto
+                        cursor pointer
+                        display inline-table
+                        background-color rgba(0, 0, 0, 0)
+                    image img
+                        src img/play_w.png
+                        height 55px
+                        width 55px
+                        css
+                            margin 0 auto 5px
+                    div text
+                        text text
+                            val Listen
+                            css
+                                color white
+                                font-size 15px
+                    :click
+                        {
+                            var siblings = block.parent().children();
+                            for (var s in siblings) {
+                                siblings[s].css({
+                                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                                });
+                            }
+                            block.css({
+                                backgroundColor: '#1c1c1c'
+                            });
+
+                            var siblings = block.parent(2).children();
+                            for (var s in siblings) {
+                                if (s != 'header' && s != 'footer') {
+                                    if (s == block.mark())
+                                        siblings[s].on('show');
+                                    else siblings[s].on('hide');
+                                }
+                            }
+                        }
+        div songs
+            :hide
+                {
+                    block.css('display', 'none');
+                    event.stopPropagation();
+                }
+            :show
+                {
+                    block.css('display', 'block');
+                    util.requery();
+                    event.stopPropagation();
+                }
+            css
+                width 100%
+                height 100%
+                padding-top 86px
+                padding-bottom 100px
+                box-sizing border-box
+                position relative
+            div search
+                css
+                    width 100%
+                    height 70px
+                    margin-top 20px
+                    margin-bottom 15px
+                block wrap
+                    css
+                        width 100%
+                        height 100%
+                        box-sizing border-box
+                        padding 0px 35px
+                        position relative
+                    input input
+                        type text
+                        placeholder Search
+                        css
+                            width 100%
+                            height 90%
+                            box-sizing border-box
+                            padding 0px 70px 0px 30px
+                            font-size 28px
+                            outline none
+                            border none
+                            background-color rgba(60, 60, 60, 0.05)
+                            border-radius 5px
+                        :go
+                            {
+                                var input = (`${block.$().val()}`).trim();
+                                if (input != '') {
+                                    block.parent(1).sibling('results').css('display', 'none')
+                                        .sibling('loading').css('display', 'table');
+                                    setTimeout(_ => {
+                                        app.ws.api.search_songs(input);
+                                    }, 100);
+                                }
+                            }
+                        :keyup
+                            {
+                                if (event && event.keyCode && event.keyCode == 13) {
+                                    block.on('go');
+                                }
+                            }
+                    image img
+                        src img/search_b.png
+                        height 40px
+                        width 40px
+                        css
+                            opacity 0.6
+                            position absolute
+                            top 15px
+                            right 55px
+                            cursor pointer
+                            transition opacity 0.15s ease
+                        :mouseover
+                            css
+                                opacity 0.8
+                        :mouseout
+                            css
+                                opacity 0.6
+                        :click
+                            {
+                                block.sibling('input').on('go');
+                            }
+            !song-result
+                init
+                    {
+                        var block;
+                        block = Block('block')
+                            .css({
+                                height: '110px',
+                                width: '100%'
+                            })
+                            .add(Block('block', 'wrap')
+                                .css({
+                                    width: '90%',
+                                    height: '90%',
+                                    backgroundColor: 'white',
+                                    margin: '0 auto',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    boxShadow: 'rgba(50, 50, 50, 0.04) 0px 2px 4px',
+                                    opacity: '0.9',
+                                    marginBottom: '0',
+                                    transition: 'box-shadow 0.1s ease, margin-bottom 0.12s ease, opacity 0.1s ease',
+                                    position: 'relative'
+                                })
+                                .__child('content')
+                                    .css('text-align', 'left')
+                                    .__parent()
+                                .on('mouseover', (e, b, d) => {
+                                    b.css({
+                                        boxShadow: 'rgba(50, 50, 50, 0.07) 0px 2px 4px',
+                                        opacity: '1',
+                                        marginBottom: '4px'
+                                    });
+                                })
+                                .on('mouseout', (e, b, d) => {
+                                    b.css({
+                                        boxShadow: 'rgba(50, 50, 50, 0.05) 0px 2px 4px',
+                                        opacity: '0.9',
+                                        marginBottom: '0'
+                                    });
+                                })
+                                .on('click', (e, b, d) => {
+                                    app.audio.stop_song();
+                                    app.audio.id = block.mark();
+                                    app.ws.api.play_song(block.mark());
+                                })
+                                .add(Block('div', 'art')
+                                    .css({
+                                        height: '100%',
+                                        position: 'absolute',
+                                        left: '0',
+                                        top: '0',
+                                        borderRight: '0.5px solid rgba(0, 0, 0, 0.04)',
+                                        borderRadius: '4px 0 0 4px'
+                                    })
+                                    .query('window height != 0', function (event, block, data) {
+                                        var size = block.parent().$().height() + 'px';
+                                        block.css({
+                                            height: size,
+                                            width: size
+                                        });
+                                        block.child('image').data({
+                                            height: size,
+                                            width: size
+                                        });
+                                    })
+                                    .add(Block('image', 1)
+                                        .data({
+                                            src: 'img/cover_m.png',
+                                            height: '20px',
+                                            width: '20px'
+                                        })
+                                        .css({
+                                            borderRadius: '4px 0 0 4px'
+                                        })
+                                    )
+                                )
+                                .add(Block('div', 'upper')
+                                    .css({
+                                        height: '56%',
+                                        width: '80%',
+                                        position: 'absolute',
+                                        top: '0',
+                                        left: '0',
+                                        overflow: 'scroll'
+                                    })
+                                    .add(Block('text', 'title')
+                                        .data('Song Title')
+                                        .css({
+                                            fontSize: '25px',
+                                            position: 'absolute',
+                                            bottom: '0',
+                                            left: '0',
+                                            whiteSpace: 'nowrap',
+                                            paddingRight: '10px'
+                                        })
+                                    )
+                                    .query('window height != 0', function (event, block, data) {
+                                        var size = block.parent().$().height();
+                                        block.css({
+                                            left: (size + 30) + 'px',
+                                            width: (block.parent().$().width() - size - 30 - block.sibling('time').$().width() - 15 - 15) + 'px'
+                                        });
+                                    })
+                                )
+                                .add(Block('div', 'lower')
+                                    .css({
+                                        height: '44%',
+                                        position: 'absolute',
+                                        bottom: '0',
+                                        left: '0',
+                                        width: '100%',
+                                        overflow: 'scroll'
+                                    })
+                                    .add(Block('text', 'artist-album')
+                                        .html('·')
+                                        .css({
+                                            fontSize: '16px',
+                                            position: 'absolute',
+                                            top: '0',
+                                            left: '0',
+                                            whiteSpace: 'nowrap',
+                                            paddingRight: '10px'
+                                        })
+                                        .bind('info', (info, b) => {
+                                            b.html(`${info.album}&nbsp;&nbsp;·&nbsp;&nbsp;${info.artist}`);
+                                        })
+                                        .data({
+                                            info: {
+                                                artist: 'Song Artist',
+                                                album: 'Song Album'
+                                            }
+                                        })
+                                    )
+                                    .query('window height != 0', function (event, block, data) {
+                                        var size = block.parent().$().height();
+                                        block.css({
+                                            left: (size + 30) + 'px',
+                                            width: (block.parent().$().width() - size - 30 - block.sibling('time').$().width() - 15 - 15) + 'px'
+                                        });
+                                    })
+                                )
+                                .add(Block('div', 'time')
+                                    .css({
+                                        height: '100%',
+                                        position: 'absolute',
+                                        top: '0',
+                                        right: '15px',
+                                        width: '100px',
+                                        textAlign: 'center'
+                                    })
+                                    .add(Block('block', 'wrap')
+                                        .add(Block('div', 'content')
+                                            .add(Block('text', 1)
+                                                .data('0:00')
+                                                .css({
+                                                    fontSize: '29px',
+                                                    whiteSpace: 'nowrap',
+                                                    width: '100%'
+                                                })
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ;
+                        return block;
+                    }
+                load
+                    {
+                        data('title', title => {
+                            block.child('wrap/upper/title').html('').data(title);
+                        });
+                        data('art', art => {
+                            block.child('wrap/art/image').data({ src: art });
+                        });
+                        data('artist_album', info => {
+                            block.child('wrap/lower/artist-album').data({ info: info });
+                        });
+                        data('duration', duration => {
+                            var desc = util.duration_desc(duration);
+                            block.child('wrap/time/wrap/content/text').html('').data(`${desc.minutes}:${desc.seconds}`);
+                        });
+                    }
+            div results
+                css
+                    width 100%
+                    height 100%
+                    box-sizing border-box
+                    overflow scroll
+                    padding-top 0
+                    padding-bottom 120px
+                block placeholder
+                    div content
+                        css
+                            height 160px
+                            width 160px
+                            opacity 0.3
+                            margin 0 auto 80px
+                        image img
+                            src img/note_b.png
+                            height 160px
+                            width 160px
+                :change_page
+                    {
+                        var next_page = -1;
+                        var song_data = block.key('data'); 
+                        var current_page = block.key('current_page');    
+                        if (data.direction == 'left') {
+                            if (current_page > 0) {
+                                next_page = current_page - 1;
+                                block.on('load_page', {
+                                    page: next_page
+                                });
+                            }
+                        } else if (data.direction == 'right') {
+                            if (current_page < song_data.length - 1) {
+                                next_page = current_page + 1;
+                                block.on('load_page', {
+                                    page: next_page
+                                });
+                            }
+                        }
+                        if (next_page == 0)
+                            block.sibling('pages').child('left').on('disable');
+                        else block.sibling('pages').child('left').on('enable');
+                        if (next_page == song_data.length - 1)
+                            block.sibling('pages').child('right').on('disable');
+                        else block.sibling('pages').child('right').on('enable');
+                    }
+                :load_page
+                    {
+                        var page = data.page;
+                        var search_songs = block.key('data');
+                        if (page >= 0 && page < search_songs.length) {
+                            block.html('');
+                            var song_ids = [];
+                            for (var ss in search_songs[page]) {
+                                var song_data = search_songs[page][ss];
+                                song_ids.push(song_data.id);
+                                block.add(Block('song-result', `${song_data.id}`)
+                                        .data({
+                                            title: song_data.title,
+                                            artist_album: {
+                                                artist: song_data.artist,
+                                                album: song_data.album
+                                            },
+                                            duration: song_data.duration
+                                        })
+                                    )
+                                ;
+                            }
+                            if (search_songs.length > 1) {
+                                block.css('padding-bottom', '190px');
+                                block.sibling('pages').css('display', 'block')
+                                    .child('page-marking/content/text')
+                                        .html('').data(`${page + 1}/${search_songs.length}`);
+                            } else {
+                                block.css('padding-bottom', '120px');
+                                block.sibling('pages').css('display', 'none');
+                            }
+                            block.key('current_page', page);
+                            block.$().scrollTop(0);
+                            util.requery();
+                            app.ws.api.get_artwork_preview(song_ids);
+                        }
+                    }
+            block loading
+                css
+                    box-sizing border-box
+                    padding-top 20px
+                    padding-bottom 100px
+                    display none
+                div img
+                    css
+                        height 100px
+                        width 100px
+                        margin 0 auto 70px
+                        opacity 0.65
+                    image image
+                        src img/loading_b.svg
+                        height 100px
+                        width 100px
+            div pages
+                css
+                    position absolute
+                    left 0
+                    bottom 100px
+                    width 100%
+                    height 75px
+                    width 100%
+                    background-color #f5f5f5
+                    display none
+                    box-shadow 0px -1px 5px 2px rgba(0,0,0,0.02)
+                block page-marking
+                    div content
+                        css
+                            width 100px
+                            height auto
+                            margin 0 auto
+                        text text
+                            val 0/0
+                            css
+                                font-size 16px
+                                color black
+                block left
+                    css
+                        position absolute
+                        top 0
+                        left 0
+                        width 55%
+                        cursor pointer
+                        opacity 0.65
+                        background-color rgba(0, 0, 0, 0)
+                        transition opacity 0.15s ease, background-color 0.15s ease
+                        //border-radius 0 3px 0 0
+                    :mouseover
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.css({
+                                    opacity: '0.75',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                                });
+                            }
+                        }
+                    :mouseout
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.css({
+                                    opacity: '0.65',
+                                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                                });
+                            }
+                        }
+                    :enable
+                        {
+                            block.css('opacity', '0.65');
+                            block.key('enabled', 'yes');
+                        }
+                    :disable
+                        {
+                            block.css({
+                                opacity: '0.2',
+                                backgroundColor: 'rgba(0, 0, 0, 0)'
+                            });
+                            block.key('enabled', 'no');
+                        }
+                    :click
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.parent().sibling('results').on('change_page', {
+                                    direction: 'left'
+                                });
+                            } 
+                        }
+                    image img
+                        src img/left_b.png
+                        height 55px
+                        width 55px
+                        css
+                            margin 0 auto
+                block right
+                    css
+                        position absolute
+                        top 0
+                        right 0
+                        width 55%
+                        cursor pointer
+                        opacity 0.65
+                        background-color rgba(0, 0, 0, 0)
+                        transition opacity 0.15s ease, background-color 0.15s ease
+                        //border-radius 3px 0 0 0
+                    :mouseover
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.css({
+                                    opacity: '0.75',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                                });
+                            }
+                        }
+                    :mouseout
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.css({
+                                    opacity: '0.65',
+                                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                                });
+                            }
+                        }
+                    :enable
+                        {
+                            block.css('opacity', '0.65');
+                            block.key('enabled', 'yes');
+                        }
+                    :disable
+                        {
+                            block.css({
+                                opacity: '0.2',
+                                backgroundColor: 'rgba(0, 0, 0, 0)'
+                            });
+                            block.key('enabled', 'no');
+                        }
+                    :click
+                        {
+                            if (block.key('enabled') == 'yes') {
+                                block.parent().sibling('results').on('change_page', {
+                                    direction: 'right'
+                                });
+                            } 
+                        }
+                    image img
+                        src img/right_b.png
+                        height 55px
+                        width 55px
+                        css
+                            margin 0 auto
+        div play
+            :hide
+                {
+                    block.css('display', 'none');
+                    event.stopPropagation();
+                }
+            :show
+                {
+                    block.css('display', 'block');
+                    util.requery();
+                    event.stopPropagation();
+                }
+            #song
+                {
+                    app.audio.latch_timer((time, state, playing) => {
+                        if (state == "loaded" && playing) {
+                            var scrub = block.child('control/seek/wrap/scrub-circle');
+                            if (scrub.key('active') == 'no') {
+                                scrub.data({ duration: time })
+                                    .sibling('left-time').data({ duration: time });
+                            }
+                        }
+                    });
+                    block.child('display/wrap/title')
+                            .html('').data(song.data.song.title)
+                        .sibling('album')
+                            .html('').data(song.data.song.album)
+                        .sibling('artist')
+                            .html('').data(song.data.song.artist)
+                        .parent(1)
+                            .css('display', 'block')
+                        .sibling('control')
+                            .css('margin-top', '0')
+                            .child('seek')
+                                .css('display', 'table')
+                                .child('wrap/right-time')
+                                    .data({ duration: song.data.file.duration })
+                    ;
+                }
+            css
+                width 100%
+                height 100%
+                padding-top 86px
+                padding-bottom 100px
+                box-sizing border-box
+            block cover
+                css
+                    height 430px
+                    margin-top 30px
+                div image
+                    css
+                        height 300px
+                        width 300px
+                        margin 0 auto
+                    image img
+                        src img/cover_l.png
+                        height 100%
+                        width 100%
+                        css
+                            border-radius 5px
+                    @query window height != 0
+                        {
+                            var size = 0.57 * block.parent().$().width();
+                            block.css({
+                                height: (size) + 'px',
+                                width: (size) + 'px'
+                            });
+                        }
+            div display
+                css
+                    height 90px
+                    margin-top 5px
+                    display none
+                div wrap
+                    css
+                        width 100%
+                        height auto
+                        text-align center
+                        font-size 20px
+                        color #141414
+                    text title
+                        val Song Title
+                        css
+                            font-size 38px
+                            color #141414
+                    div spacer1
+                        css
+                            height 2px
+                    text album
+                        val Song Album
+                    text spacer2
+                        html &nbsp;&nbsp;·&nbsp;&nbsp;
+                    text artist
+                        val Song Artist
+            div control
+                css
+                    margin-top 40px
+                    height 120px
+                block seek
+                    css
+                        height 40px
+                        width 100%
+                        display none
+                        margin-bottom 25px
+                        position relative
+                        font-size 15px
+                        color #222
+                    div wrap
+                        css
+                            height 22px
+                            position relative
+                            margin 0 auto
+                        @query window height != 0
+                            {
+                                block.css('width', ((block.parent().$().width() * 0.7)) + 'px');
+                            }
+                        div left-time
+                            class noselect
+                            css
+                                width 50px
+                                height 100%
+                                display inline-block
+                                float left
+                                pointer-events none
+                            text text
+                                val 0:00
+                                class noselect
+                            #duration
+                                {
+                                    var duration_d = util.duration_desc(duration);
+                                    block.child('text').html('').data(`${duration_d.minutes}:${duration_d.seconds}`);
+                                }
+                        block line
+                            class noselect
+                            css
+                                height 100%
+                                display inline-table
+                                float left
+                                pointer-events none
+                            @query window height != 0
+                                {
+                                    block.css('width', ((block.parent(1).$().width() * 0.7) - 100) + 'px');
+                                }
+                            div graphic
+                                css
+                                    height 3px
+                                    background-color #777
+                                    border-radius 2px
+                                    width 100%
+                                    float left
+                        div right-time
+                            class noselect
+                            css
+                                width 50px
+                                height 100%
+                                display inline-block
+                                pointer-events none
+                            text text
+                                val 0:00
+                                class noselect
+                            #duration
+                                {
+                                    var duration_d = util.duration_desc(duration);
+                                    block.child('text').html('').data(`${duration_d.minutes}:${duration_d.seconds}`);
+                                }
+                        div scrub-circle
+                            $active no
+                            css
+                                position absolute
+                                top 0
+                                left 50px
+                                height 100%
+                                width 20px
+                                background-color #555
+                                border-radius 100%
+                                cursor pointer
+                                transition background-color 0.2s ease
+                            @query window height != 0
+                                {
+                                    block.css('width', (block.parent().$().height()) + 'px');
+                                }
+                            :mousedown
+                                {
+                                    block.css('background-color', '#666');
+                                    block.key('active', 'yes');
+                                    event.stopPropagation();
+                                }
+                            :mouseup
+                                {
+                                    if (block.key('active') == "yes" && block.key('ratio') !== null) {
+                                        var ratio = block.key('ratio');
+                                        app.audio.set_time(ratio);
+                                        block.sibling('left-time').data({
+                                            duration: ratio * app.audio.get_dur()
+                                        });
+                                        block.key('ratio', null);
+                                    }
+                                    block.css('background-color', '#555');
+                                    block.key('active', 'no');
+                                    event.stopPropagation();
+                                }
+                            #duration
+                                {
+                                    if (block.key('active') == "no") {
+                                        var width = block.sibling('line').$().width() - 20;
+                                        block.css({
+                                            left: (50 + (duration / app.audio.get_dur() * width)) + 'px'
+                                        });
+                                    }
+                                }
+                        :mouseup
+                            {
+                                var scrub = block.child('scrub-circle');
+                                if (scrub.key('active') == 'no') {
+                                    // TODO: move scrub on line click
+                                }
+                                event.stopPropagation();
+                            }
+                block play
+                    css
+                        height 80px
+                        width 80px
+                        margin 0 auto
+                    block button
+                        $state play
+                        $enabled yes
+                        css
+                            border-radius 100%
+                            background-color rgba(0, 0, 0, 0.03)
+                            cursor pointer
+                            transition background-color 0.2s ease
+                        image img
+                            src img/play_b.png
+                            height 80%
+                            width 80%
+                            css
+                                margin 0 auto
+                                opacity 0.67
+                        :enable
+                            {
+                                if (block.key('enabled') == 'no') {
+                                    block.css('opacity', '1');
+                                    block.key('enabled', 'yes')
+                                }
+                            }
+                        :disable
+                            {
+                                if (block.key('enabled') == 'yes') {
+                                    block.css('opacity', '0.7');
+                                    block.key('enabled', 'no')
+                                }
+                            }
+                        :mouseover
+                            {
+                                if (block.key('enabled') == 'yes')
+                                    block.css('background-color', 'rgba(0, 0, 0, 0.05)');
+                            }
+                        :mouseout
+                            {
+                                block.css('background-color', 'rgba(0, 0, 0, 0.03)');
+                            }
+                        :mouseup
+                            {
+                                if (block.key('enabled') == 'yes')
+                                    block.css('background-color', 'rgba(0, 0, 0, 0.05)');
+                            }
+                        :mousedown
+                            {
+                                if (block.key('enabled') == 'yes')
+                                    block.css('background-color', 'rgba(0, 0, 0, 0.07)');
+                            }
+                        :click
+                            {
+                                if (block.key('enabled') == 'yes') {
+                                    var state = block.key('state');
+                                    if (state == 'play') {
+                                        app.audio.resume_song();
+                                        block.child('img').data({
+                                            src: 'img/pause_b.png'
+                                        });
+                                        block.key('state', 'pause');
+                                    } else if (state == 'pause') {
+                                        app.audio.pause_song();
+                                        block.child('img').data({
+                                            src: 'img/play_b.png'
+                                        });
+                                        block.key('state', 'play');
+                                    }
+                                }
+                            }
+                        {
+                            block.on('disable');
+                        }
+            {
+                //setTimeout(_ => {
+                //    block.on('show')
+                //        .sibling('songs').on('hide');
+                //}, 500);
+            }
+    :mousemove
+        {
+            var scrub = block.child('main/play/control/seek/wrap/scrub-circle');
+            if (scrub.key('active') == 'yes') {
+                var line = scrub.sibling('line');
+                var distance = Math.floor(event.clientX - line.$().offset().left);
+                var width = line.$().width();
+                if (distance < 0) distance = 0;
+                if (distance > width) distance = width;
+                var ratio = distance / width;
+                scrub.css('left', (50 + (ratio * (width - 20))) + 'px');
+                scrub.key('ratio', ratio);
+                scrub.sibling('left-time').data({
+                    duration: ratio * app.audio.get_dur()
+                });
+            }
+        }
+    :mouseup
+        {
+            block.child('main/play/control/seek/wrap/scrub-circle').on('mouseup');
+        }
